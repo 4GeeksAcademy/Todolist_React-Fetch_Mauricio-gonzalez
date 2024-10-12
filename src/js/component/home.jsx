@@ -1,59 +1,46 @@
-import React, { useState, useEffect } from "react";
-import ReactDOM from "react-dom/client";
-import Home from "./component/home";
+import React, { useState } from "react";
 
-const App = () => {
-  const [tasks, setTasks] = useState([]);
+const Home = ({ tasks, onAddTask, onDeleteTask, onClearTasks }) => {
+  const [newTask, setNewTask] = useState("");
 
-  // Obtener las tareas del servidor al cargar la app
-  useEffect(() => {
-    fetch('https://playground.4geeks.com/todo/user/maurigon89', {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
-    .then(resp => resp.json())
-    .then(data => setTasks(data))
-    .catch(error => console.error("Error fetching tasks:", error));
-  }, []);
-
-  // Sincronizar tareas con el servidor
-  const syncTasks = (updatedTasks) => {
-    fetch('https://playground.4geeks.com/todo/user/maurigon89', {
-      method: "PUT",
-      body: JSON.stringify(updatedTasks),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
-    .then(resp => resp.json())
-    .then(data => console.log("Tasks synced:", data))
-    .catch(error => console.error("Error syncing tasks:", error));
+  const handleAddTask = (e) => {
+    e.preventDefault();
+    if (newTask.trim()) {
+      onAddTask({ label: newTask, done: false });
+      setNewTask("");
+    }
   };
 
-  // Añadir tarea
-  const addTask = (newTask) => {
-    const updatedTasks = [...tasks, newTask];
-    setTasks(updatedTasks);
-    syncTasks(updatedTasks);
-  };
-
-  // Eliminar tarea
-  const deleteTask = (taskIndex) => {
-    const updatedTasks = tasks.filter((_, index) => index !== taskIndex);
-    setTasks(updatedTasks);
-    syncTasks(updatedTasks);
-  };
-
-  // Limpiar todas las tareas
-  const clearTasks = () => {
-    setTasks([]);
-    syncTasks([]);  
-  };
-
-  return <Home tasks={tasks} onAddTask={addTask} onDeleteTask={deleteTask} onClearTasks={clearTasks} />;
+  return (
+    <div className="text-center">
+      <h1 className="text-center mt-5">Todo List</h1>
+      <form onSubmit={handleAddTask}>
+        <input
+          type="text"
+          value={newTask}
+          onChange={(e) => setNewTask(e.target.value)}
+          placeholder="Añade una nueva tarea"
+          className="form-control my-3"
+        />
+        <button type="submit" className="btn btn-success mb-3">
+          Añadir Tarea
+        </button>
+      </form>
+      <ul className="list-group">
+        {tasks.map((task, index) => (
+          <li key={index} className="list-group-item d-flex justify-content-between">
+            {task.label}
+            <button className="btn btn-danger" onClick={() => onDeleteTask(index)}>
+              Eliminar
+            </button>
+          </li>
+        ))}
+      </ul>
+      <button className="btn btn-danger mt-3" onClick={onClearTasks}>
+        Limpiar todas las tareas
+      </button>
+    </div>
+  );
 };
 
-const root = ReactDOM.createRoot(document.getElementById('app'));
-root.render(<App />);
+export default Home;

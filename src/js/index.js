@@ -1,25 +1,49 @@
 // Importar React y ReactDOM
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
-
-// Importar el componente Home
 import Home from "./component/home.jsx";
 
 // Componente principal que maneja la lista de tareas
 const App = () => {
-  const [tasks, setTasks] = React.useState([]);
+  const [tasks, setTasks] = useState([]);
 
-  // Obtener las tareas cuando se carga el componente por primera vez
-  React.useEffect(() => {
+  // Crear usuario al cargar el componente por primera vez
+  useEffect(() => {
+    fetch('https://playground.4geeks.com/todo/user/maurigon89', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify([])
+    })
+      .then(resp => {
+        if (!resp.ok) throw new Error("Failed to create user");
+        return resp.json();
+      })
+      .then(data => console.log("Usuario creado: ", data))
+      .catch(error => console.error("Error al crear usuario:", error));
+  }, []);
+
+  // Obtener las tareas al cargar el componente
+  useEffect(() => {
     fetch('https://playground.4geeks.com/todo/user/maurigon89', {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
       }
     })
-    .then(resp => resp.json())
-    .then(data => setTasks(data))
-    .catch(error => console.error("Error al obtener las tareas:", error));
+      .then(resp => {
+        if (!resp.ok) throw new Error("Error al obtener las tareas");
+        return resp.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setTasks(data);
+        } else {
+          throw new Error("El formato de las tareas no es correcto");
+        }
+      })
+      .catch(error => console.error("Error al obtener las tareas:", error));
   }, []);
 
   // Sincronizar las tareas con el servidor
@@ -31,9 +55,12 @@ const App = () => {
         "Content-Type": "application/json"
       }
     })
-    .then(resp => resp.json())
-    .then(data => console.log("Tareas sincronizadas:", data))
-    .catch(error => console.error("Error al sincronizar las tareas:", error));
+      .then(resp => {
+        if (!resp.ok) throw new Error("Error al sincronizar las tareas");
+        return resp.json();
+      })
+      .then(data => console.log("Tareas sincronizadas:", data))
+      .catch(error => console.error("Error al sincronizar las tareas:", error));
   };
 
   // Añadir nueva tarea
